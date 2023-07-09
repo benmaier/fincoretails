@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.special import erf, erfinv
+from scipy.stats import lognorm as splognorm
 
 def mu_and_sigma(data):
     mu = np.mean(np.log(data))

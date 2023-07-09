@@ -65,10 +65,12 @@ def alpha_and_log_likelihood_fixed_xmin(data, xmin, return_nLambda_and_logx=Fals
 
     a = 0.5 + np.sqrt(0.25 + n/nL * 1/(L-np.log(xmin)))
 
+    logLL = n * np.log( (a-1)/a / xmin ) - a*nL*(L-np.log(xmin))
+
     if not return_nLambda_and_logx:
-        return a, n * np.log( (a-1)/a / xmin ) - a*nL*(L-np.log(xmin))
+        return a, logLL
     else:
-        return a, n * np.log( (a-1)/a / xmin ) - a*nL*(L-np.log(xmin)), nL, L
+        return a, logLL, nL, L
 
 def alpha_xmin_and_log_likelihood(data):
 
