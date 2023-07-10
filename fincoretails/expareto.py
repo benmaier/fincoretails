@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as pl
 from scipy.stats import pareto, expon
-from scipy.optimize import newton, bisect
+from scipy.optimize import newton, brentq
 
 from fincoretails.tools import general_quantile
 
@@ -41,7 +41,6 @@ def sample(alpha, xmin, Nsample):
     ea = np.exp(a)
     C = a*(a-1) / y / (1+(a-1)*ea)
     Pcrit = C*y/a * (ea-1)
-    print(Pcrit, C*y*ea/a)
     u = np.random.rand(Nsample)
     ndx = np.where(u<Pcrit)[0]
     Nlow = len(ndx)
@@ -87,8 +86,6 @@ def alpha_xmin_and_log_likelihood_fixed_xmin_index(data, j, xmins=None):
     xleft = xmins[j]
     xright = xmins[j+1]
 
-    #print(f"{xleft=}", f"{xright=}")
-
     Lambda = data[np.where(data>xleft)[0]]
     Eta = data[np.where(data<=xleft)[0]]
     H = np.mean(Eta)
@@ -97,27 +94,19 @@ def alpha_xmin_and_log_likelihood_fixed_xmin_index(data, j, xmins=None):
     nH = len(Eta)
 
     def dlogLLdalpha(xcand):
-        #xcand = a * nH * H / (n - a*nL)
         a = n / (nL+ nH*H/xcand)
-        #print(f"{a=}", f"{xcand=}")
         return   n*(1/a + 1/(a-1) - a*np.exp(a)/(1+np.exp(a)*(a-1)))\
                - nL*(L-np.log(xcand)) - nH*(H/xcand - 1)
 
     try:
-        xmin_new = bisect(dlogLLdalpha,xleft,xright)
+        xmin_new = brentq(dlogLLdalpha,xleft,xright)
     except ValueError as e:
         return None, None, None
-    #except RuntimeError as e:
-    #    return None, None, None
 
-    #xmin_new = a * nH * H / (n - a*nL)
-    #print(f"{xmin_new=}")
     xmin = xmin_new
     a = n / (nL+ nH*H/xmin)
     C = a*(a-1) / xmin / (1+(a-1)*np.exp(a))
     logLL = n*np.log(C) - a*nL*(L-np.log(xmin)) - a*nH*(H/xmin - 1)
-
-    #a, logLL = alpha_and_log_likelihood_fixed_xmin(data, xmin_new, a)
 
     return a, xmin_new, logLL
 
@@ -132,7 +121,6 @@ def alpha_xmin_and_log_likelihood(data, minxmin=6):
     alphas, nLs, nSs, logLLs  = [], [],[], []
     sampled_xmins = []
     for j, xj in enumerate(xmins):
-        #a, logLL = alpha_and_log_likelihood_fixed_xmin(data, xj)
         alpha, xmincand, logLL = alpha_xmin_and_log_likelihood_fixed_xmin_index(data,j,xmins)
 
         if xmincand is None:
@@ -141,68 +129,6 @@ def alpha_xmin_and_log_likelihood(data, minxmin=6):
             break
 
     return alpha, xmincand, logLL
-
-#def alpha_xmin_and_log_likelihood(data, minxmin=6):
-#
-#    n = len(data)
-#    xmins = np.sort(np.unique(data))
-#    xmins = xmins[xmins>=minxmin]
-#
-#    maxLogLL = -np.inf
-#    alphas, nLs, nSs, logLLs,  = [], [],[], []
-#    sampled_xmins = []
-#    for j, xj in enumerate(xmins):
-#        a, logLL = alpha_and_log_likelihood_fixed_xmin(data, xj)
-#        alphas.append(a)
-#        logLLs.append(logLL)
-#        sampled_xmins.append(xj)
-#
-#        if logLL > maxLogLL:
-#            maxLogLL = logLL
-#        else:
-#            break
-#
-#    print(f"found maximum at xmin={xmins[j-1]}")
-#
-#    if j == 1:
-#        check_indices = [0]
-#    else:
-#        check_indices = [j-1, j-2]
-#
-#    current_max_tuple = alphas[j-1], sampled_xmins[j-1], logLLs[j-1]
-#
-#    for k in check_indices:
-#        print(f"now checking xmin={xmins[k]}")
-#        alpha, xmincand, logLL = alpha_xmin_and_log_likelihood_fixed_xmin_index(data,k,alphas[k],alphas[k+1],xmins)
-#        print(f"found new value {alpha=} and {xmincand=}")
-#
-#        if logLL is not None and logLL > maxLogLL:
-#            maxLogLL = logLL
-#            current_set = alpha, xmincand, logLL
-#
-#    return current_max_tuple
-
-
-#def alpha_xmin_and_log_likelihood(data):
-#
-#    n = len(data)
-#    xmins = np.sort(np.unique(data))
-#
-#    maxLogLL = -np.inf
-#    alphas, nLs, Ls, logLLs = [], [],[], []
-#    sampled_xmins = []
-#    for j, xj in enumerate(xmins[10:]):
-#        a, logLL = alpha_and_log_likelihood_fixed_xmin(data, xj)
-#        alphas.append(a)
-#        logLLs.append(logLL)
-#        sampled_xmins.append(xj)
-#
-#        if logLL > maxLogLL:
-#            maxLogLL = logLL
-#        else:
-#            break
-#
-#    return alphas[j-1], sampled_xmins[j-1], logLLs[j-1]
 
 
 if __name__=="__main__":

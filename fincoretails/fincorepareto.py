@@ -9,7 +9,7 @@ from fincoretails.tools import general_quantile
 def quantile(q, *parameters):
     return general_quantile(q, cdf, *parameters)
 
-def fit_params(data, beta=None, beta_initial_values=(0.,10.)):
+def fit_params(data, beta=None, beta_initial_values=(0.,3.)):
     if beta is not None:
         a, xm, logLL = alpha_xmin_and_log_likelihood(data, beta)
         return a, xm, beta

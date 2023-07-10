@@ -13,3 +13,10 @@ from .metadata import (
         __email__,
         __status__,
     )
+
+from .tools import (
+        general_quantile,
+        loglikelihood_ratio,
+        aic,
+    )
+
