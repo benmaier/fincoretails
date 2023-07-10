@@ -162,23 +162,25 @@ def alpha_xmin_beta_logLL(data,beta0=2):
 
 
 
-#def mean(alpha,xmin,beta):
-#    a, xm, b = alpha, xmin, beta
-#
-#def median(alpha,xmin,beta):
-#    a, xm, b = alpha, xmin, beta
-#
-#def variance(alpha,xmin,beta):
-#    a, xm, b = alpha, xmin, beta
-#
-#def second_moment(*args,**kwargs):
-#    return variance(*args,**kwargs) + mean(*args,**kwargs)**2
-#
-#def neighbor_degree(*args,**kwargs):
-#    return second_moment(*args,**kwargs)/mean(*args,**kwargs)
+def mean(alpha,xmin,beta):
+    assert(alpha > 2)
+    xm = xmin
+    return xm*(alpha - 1)*(beta + 1)*(beta + (alpha - 2)*(beta + 1) + 2)/((alpha - 2)*(beta + 2)*(2*alpha*beta + alpha - beta))
 
-#def quantile(q, alpha,xmin,beta):
-#    a, xm, b = alpha, xmin, beta
+def median(alpha,xmin,beta):
+    a, xm, b = alpha, xmin, beta
+    return quantile(0.5, a, xm, b)
+
+def second_moment(alpha,xmin,beta):
+    assert(alpha > 3)
+    xm = xmin
+    return xm**2*(alpha - 1)*(beta + 1)*(3*beta + (alpha - 3)*(2*beta + 3) + 9)/(3*(alpha - 3)*(beta + 3)*(2*alpha*beta + alpha - beta))
+
+def variance(*args,**kwargs):
+    return second_moment(*args,**kwargs) - mean(*args,**kwargs)**2
+
+def neighbor_degree(*args,**kwargs):
+    return second_moment(*args,**kwargs)/mean(*args,**kwargs)
 
 def ccdf(x, *args,**kwargs):
     return 1-cdf(x, *args,**kwargs)
@@ -196,7 +198,7 @@ def pdf_right(x, alpha, xmin, beta, C):
 def pdf(x, alpha, xmin, beta):
     """"""
     C = get_normalization_constant(alpha, xmin, beta)
-    result = np.piecewise(x,
+    result = np.piecewise(np.asanyarray(x,dtype=float),
                           (
                               x<0,
                               x<=xmin,
@@ -225,7 +227,7 @@ def cdf_right(x, alpha, xmin, beta, C=None):
 def cdf(x, alpha, xmin, beta):
     """"""
     C = get_normalization_constant(alpha, xmin, beta)
-    result = np.piecewise(x,
+    result = np.piecewise(np.asanyarray(x,dtype=float),
                           (
                               x<0,
                               x<=xmin,

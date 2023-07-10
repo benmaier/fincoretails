@@ -6,6 +6,9 @@ from fincoretails.fincorepareto import (
         pdf as general_pdf,
         cdf as general_cdf,
         get_normalization_constant as general_normalization_constant,
+        mean as general_mean,
+        variance as general_variance,
+        median as general_median,
     )
 
 def fit_params(data, minxmin=1.000_001):
@@ -84,15 +87,18 @@ def alpha_xmin_and_log_likelihood(data):
 
     return current_max_tuple
 
-#def mean(alpha,xmin,beta):
-#    a, xm, b = alpha, xmin, beta
-#
-#def median(alpha,xmin,beta):
-#    a, xm, b = alpha, xmin, beta
-#
-#def variance(alpha,xmin,beta):
-#    a, xm, b = alpha, xmin, beta
-#
+def mean(alpha,xmin):
+    a, xm, b = alpha, xmin, 0
+    return general_mean(a, xm, b)
+
+def median(alpha,xmin,beta):
+    a, xm, b = alpha, xmin, 0
+    return general_median(a, xm, b)
+
+def variance(alpha,xmin,beta):
+    a, xm, b = alpha, xmin, 0
+    return general_variance(a, xm, b)
+
 def second_moment(*args,**kwargs):
     return variance(*args,**kwargs) + mean(*args,**kwargs)**2
 
@@ -102,8 +108,10 @@ def neighbor_degree(*args,**kwargs):
 def ccdf(x, *args,**kwargs):
     return 1-cdf(x, *args,**kwargs)
 
-def quantile(q,alpha,xmin,beta):
+def quantile(q,alpha,xmin):
+    beta = 0
     return general_quantile(q,cdf,alpha,xmin,beta)
+
 
 
 

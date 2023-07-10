@@ -55,3 +55,6 @@ def ccdf(x, *args,**kwargs):
 def quantile(q, mu, sigma):
     return np.exp(mu+np.sqrt(2)*sigma*erfinv(2*q-1))
 
+def sample(Nsample, mu, sigma):
+    Z = np.random.randn(Nsample)
+    return np.exp(mu + sigma*Z)

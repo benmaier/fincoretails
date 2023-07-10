@@ -16,7 +16,7 @@ right = C * (y/x)**a
 C_ = (a - 1)*(b+1)/(2*a*b - b + a)/y
 
 def rep(expr,replace_b_with=beta):
-    #expr = expr.replace(C,C_)
+    expr = expr.replace(C,C_)
     expr = expr.replace(a_,alpha-3)
     expr = expr.replace(b, beta)
     expr = expr.replace(beta,replace_b_with)
@@ -55,10 +55,12 @@ print("\n\n\n=======general nonpath pareto=======\n")
 print("\nmean x ========")
 mean = prep(xleft+xright)
 sy.pprint(mean)
+print(mean)
 
 print("\n<x^2> ========")
 x2 = prep(x2left+x2right)
 sy.pprint(x2)
+print(x2)
 
 print("\n<Pcrit> ========")
 sy.pprint(prep(Pcrit))
@@ -131,6 +133,7 @@ sy.pprint(mean)
 print("============  <x^2> ========")
 x2 = prep(x2left+x2right)
 sy.pprint(x2)
+print(x2)
 
 
 print("\n<Pcrit> ========")
@@ -143,3 +146,7 @@ print("right=")
 sy.pprint(prep(CDFright))
 
 
+sy.pprint(CDFleft)
+print(CDFleft)
+sy.pprint(CDFright)
+print(CDFright)

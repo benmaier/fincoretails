@@ -28,9 +28,9 @@ def get_normalization_constant(alpha,xmin):
     return C
 
 def Pcrit(alpha,xmin,C=None):
-    a = alpha
-    ea = np.exp(a)
-    return 1 - a/((a-1)*ea + 1)
+    if C is None:
+        C = get_normalization_constant(alpha,xmin)
+    return C*xmin/alpha * (np.exp(alpha)-1)
 
 def sample(Nsample, alpha, xmin):
     assert(xmin>0)
@@ -160,12 +160,15 @@ def pdf(x, alpha, xmin):
     return result
 
 def cdf_left(x, alpha, xmin, C=None):
-    xm = xmin
-    return ((1 - alpha)*np.exp(alpha*(xm - x)/xm) + (alpha - 1)*np.exp(alpha))/((alpha - 1)*np.exp(alpha) + 1)
+    if C is None:
+        C = get_normalization_constant(alpha, xmin)
+    return C*xmin/alpha * np.exp(alpha) * (1-np.exp(-alpha*x))
 
 def cdf_right(x, alpha, xmin, C=None):
-    xm = xmin
-    return (-xm**(alpha - 1)*alpha*x**(1 - alpha) + alpha*np.exp(alpha) - np.exp(alpha) + 1)/(alpha*np.exp(alpha) - np.exp(alpha) + 1)
+    if C is None:
+        C = get_normalization_constant(alpha, xmin)
+    P = Pcrit(alpha,xmin,C)
+    return C*xmin/(alpha-1) * (1-(xmin/x)**(alpha-1)) + P
 
 def cdf(x, alpha, xmin):
     C = get_normalization_constant(alpha, xmin)
@@ -231,15 +234,11 @@ if __name__=="__main__":
         print(f"{variance(alphatrue,xmintrue)=}")
         print(f"{median(alphatrue,xmintrue)=}")
 
-        _dens,_be,_ = pl.hist(data,np.logspace(-1,5,101),density=True)
-        pl.plot(_be, pdf(_be, alphatrue, xmintrue))
-        pl.xscale('log')
-        pl.yscale('log')
-        pl.figure()
-        pl.plot(_be,cdf(_be, alphatrue, xmintrue))
-        pl.xscale('log')
-        pl.yscale('log')
-        pl.show()
+        #_dens,_be,_ = pl.hist(data,np.logspace(-1,5,101),density=True)
+        #pl.plot(_be, pdf(_be, alphatrue, xmintrue))
+        #pl.xscale('log')
+        #pl.yscale('log')
+        #pl.show()
 
     xmins = np.linspace(4,40,2001)
 
@@ -265,7 +264,7 @@ if __name__=="__main__":
     uniquedat = uniquedat[np.where(np.logical_and(uniquedat>4,uniquedat<40))]
     unq_alphas = []
     unq_logLs = []
-
+    
     for xmin in uniquedat:
         a, LL = alpha_and_log_likelihood_fixed_xmin(data, xmin)
         unq_logLs.append(LL)
