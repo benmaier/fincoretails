@@ -1,9 +1,30 @@
 import numpy as np
 import matplotlib.pyplot as pl
 from scipy.stats import pareto
-from scipy.optimize import newton, bisect, minimize
+from scipy.optimize import bisect, minimize
 from scipy.special import erfc
-from scipy.stats import chi2
+
+from fincoretails.tools import general_quantile
+
+def quantile(q, *parameters):
+    return general_quantile(q, cdf, *parameters)
+
+def fit_params(data, beta=None, beta_initial_values=(0.,10.)):
+    if beta is not None:
+        a, xm, logLL = alpha_xmin_and_log_likelihood(data, beta)
+        return a, xm, beta
+    else:
+        curr_logLL = -np.inf
+        curr_tuple = None
+        for beta0 in beta_initial_values:
+            a, xm, beta0, logLL = alpha_xmin_beta_logLL(data,beta0=beta0)
+            if logLL > curr_logLL:
+                curr_tuple = a, xm, beta0
+                curr_logLL = logLL
+        return curr_tuple
+
+def loglikelihood(data, *parameters):
+    return np.sum(loglikelihoods(data, *parameters))
 
 def get_normalization_constant(alpha, xmin, beta):
     """"""

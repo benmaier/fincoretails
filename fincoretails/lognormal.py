@@ -2,6 +2,13 @@ import numpy as np
 from scipy.special import erf, erfinv
 from scipy.stats import lognorm as splognorm
 
+def fit_params(data):
+    mu, sigma = mu_and_sigma(data)
+    return mu, sigma
+
+def loglikelihood(data, *parameters):
+    return np.sum(loglikelihoods(data, *parameters))
+
 def mu_and_sigma(data):
     mu = np.mean(np.log(data))
     sigma2 = np.mean((np.log(data)-mu)**2)
@@ -23,9 +30,6 @@ def pdf(x,mu,sigma):
 
 def loglikelihoods(data,mu,sigma):
     return np.log(pdf(data,mu,sigma))
-
-def loglikelihood(data,mu,sigma):
-    return np.sum(loglikelihoods(data,mu,sigma))
 
 def mean(mu,sigma):
     return np.exp(mu + sigma**2/2)

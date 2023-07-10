@@ -1,7 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as pl
 from scipy.stats import pareto
-from scipy.optimize import newton, minimize, bisect
+from scipy.optimize import newton, minimize, brentq
+
+from fincoretails.tools import general_quantile
+
+def quantile(q, *parameters):
+    return general_quantile(q, cdf, *parameters)
+
+def fit_params(data, minxmin=1.001,alpha0=2):
+    a, xm, logLL = alpha_xmin_and_log_likelihood(data, minxmin=minxmin,alpha0=alpha0)
+    return a, xm
+
+def loglikelihood(data, *parameters):
+    return np.sum(loglikelihoods(data, *parameters))
 
 def get_normalization_constant(alpha, xmin):
     """"""
@@ -50,7 +62,7 @@ def sample(Nsample, alpha, xmin):
     xlow = []
     for v in ulow:
         F = lambda x: C*x*(2-1/(beta+1)*(x/xmin)**beta) - v
-        xl = bisect(F, 0, xmin)
+        xl = brentq(F, 0, xmin)
         xlow.append(xl)
 
 
@@ -84,39 +96,6 @@ def alpha_and_log_likelihood_fixed_xmin(data, xmin,alpha0=1.5):
     logLL = n*np.log(C) - a*nL*L + nH * np.mean(np.log(2-(Eta/xmin)**a))
 
     return a, logLL
-
-#def alpha_and_log_likelihood_fixed_xmin(data, xmin, alpha0=1.001):
-#    n = len(data)
-#    Lambda = data[np.where(data>xmin)[0]]
-#    Eta = data[np.where(data<=xmin)[0]]
-#    nL = len(Lambda)
-#    nH = len(Eta)
-#    L = np.mean(np.log(Lambda))
-#
-#    x = xmin
-#    def minusloglikeli(parms):
-#        a = parms[0]
-#        C = get_normalization_constant(a,x)
-#        H = np.mean(np.log(2-(Eta/x)**a))
-#        L_ = L - np.log(x)
-#        return - (n*np.log(C) - a * nL * L_ + nH * H)
-#
-#    try:
-#        res = minimize(minusloglikeli,
-#                       x0=[alpha0],
-#                       bounds=[(1.0001,np.inf)],
-#                       )
-#        #print(res)
-#    except ValueError as e:
-#        return None, None, None
-#
-#    a = res.x[0]
-#
-#    logLL = -minusloglikeli(res.x)
-#
-#    return a, logLL
-
-
 
 def alpha_xmin_and_log_likelihood_fixed_xmin_index(data, j, a0, xmins=None):
 
@@ -156,7 +135,7 @@ def alpha_xmin_and_log_likelihood_fixed_xmin_index(data, j, a0, xmins=None):
 
     return a, x, logLL
 
-def alpha_xmin_and_log_likelihood(data, minxmin=1.001):
+def alpha_xmin_and_log_likelihood(data, minxmin=1.001, alpha0=2):
 
     n = len(data)
     xmins = np.sort(np.unique(data))
@@ -167,7 +146,7 @@ def alpha_xmin_and_log_likelihood(data, minxmin=1.001):
     sampled_xmins = []
 
     for j, xj in enumerate(xmins):
-        a, xmincand, logLL = alpha_xmin_and_log_likelihood_fixed_xmin_index(data,j,2,xmins)
+        a, xmincand, logLL = alpha_xmin_and_log_likelihood_fixed_xmin_index(data,j,alpha0,xmins)
         alphas.append(a)
         logLLs.append(logLL)
         sampled_xmins.append(xmincand)
@@ -182,60 +161,6 @@ def alpha_xmin_and_log_likelihood(data, minxmin=1.001):
 
     return current_max_tuple
 
-#def alpha_xmin_and_log_likelihood(data, minxmin=1.001):
-#
-#    n = len(data)
-#    xmins = np.sort(np.unique(data))
-#    xmins = xmins[xmins>=minxmin]
-#
-#    maxLogLL = -np.inf
-#    alphas, nLs, Ls, logLLs = [], [],[], []
-#    sampled_xmins = []
-#    for j, xj in enumerate(xmins):
-#        a, logLL = alpha_and_log_likelihood_fixed_xmin(data, xj)
-#        alphas.append(a)
-#        logLLs.append(logLL)
-#        sampled_xmins.append(xj)
-#
-#        if logLL > maxLogLL:
-#            maxLogLL = logLL
-#        else:
-#            break
-#
-#    if j == 1:
-#        check_indices = [0]
-#    else:
-#        check_indices = [j-1, j-2]
-#
-#    current_max_tuple = alphas[j-1], sampled_xmins[j-1], logLLs[j-1]
-#
-#    for k in check_indices:
-#        alpha, xmincand, logLL = alpha_xmin_and_log_likelihood_fixed_xmin_index(data,k,alphas[k],xmins)
-#        print(current_max_tuple)
-#        print(alpha, xmincand, logLL)
-#
-#        if logLL is not None and logLL > maxLogLL:
-#            print("it happened!")
-#            maxLogLL = logLL
-#            current_max_tuple = alpha, xmincand, logLL
-#
-#    return current_max_tuple
-
-
-#def mean(alpha,xmin,beta):
-#    a, xm, b = alpha, xmin, beta
-#
-#def median(alpha,xmin,beta):
-#    a, xm, b = alpha, xmin, beta
-#
-#def variance(alpha,xmin,beta):
-#    a, xm, b = alpha, xmin, beta
-#
-#def second_moment(*args,**kwargs):
-#    return variance(*args,**kwargs) + mean(*args,**kwargs)**2
-#
-#def neighbor_degree(*args,**kwargs):
-#    return second_moment(*args,**kwargs)/mean(*args,**kwargs)
 
 def cdf(x,alpha,xmin):
     beta = alpha
@@ -257,9 +182,6 @@ def cdf(x,alpha,xmin):
 
 def ccdf(x, *args,**kwargs):
     return 1-cdf(x, *args,**kwargs)
-
-#def quantile(q, alpha,xmin,beta):
-#    a, xm, b = alpha, xmin, beta
 
 
 

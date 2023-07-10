@@ -3,6 +3,18 @@ import matplotlib.pyplot as pl
 from scipy.stats import pareto, expon
 from scipy.optimize import newton, bisect
 
+from fincoretails.tools import general_quantile
+
+def quantile(q, *parameters):
+    return general_quantile(q, cdf, *parameters)
+
+def fit_params(data, N, minxmin=4):
+    a, xm, logLL = alpha_xmin_and_log_likelihood(data, minxmin=minxmin)
+    return a, xm
+
+def loglikelihood(data, *parameters):
+    return np.sum(loglikelihoods(data, *parameters))
+
 def pdf(x, alpha, xmin):
     ea = np.exp(alpha)
     C = alpha*(alpha-1) / xmin / (1+(alpha-1)*ea)

@@ -1,9 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as pl
 from scipy.stats import pareto
-from scipy.optimize import newton, bisect
+from scipy.optimize import bisect
 from scipy.special import erfc
-from scipy.stats import chi2
+
+def fit_params(data, N):
+    t, rho = t_and_rho(data,N)
+    return t, rho, N
 
 def pdf(x, t, rho, N):
     y0 = inverse_normal_cdf_approx(1-x/(N-1))

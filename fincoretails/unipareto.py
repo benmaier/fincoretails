@@ -1,9 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as pl
 from scipy.stats import pareto
-from scipy.optimize import newton, bisect, minimize
-from scipy.special import erfc
-from scipy.stats import chi2
+
+def fit_params(data, minxmin=1.000_001):
+    a, xm, logLL = alpha_xmin_and_log_likelihood(data, minxmin=minxmin)
+    return a, xm
+
+def loglikelihood(data, *parameters):
+    return np.sum(loglikelihoods(data, *parameters))
 
 def get_normalization_constant(alpha, xmin):
     """"""
@@ -131,8 +135,8 @@ def cdf(x,alpha,xmin):
 def ccdf(x, *args,**kwargs):
     return 1-cdf(x, *args,**kwargs)
 
-#def quantile(q, alpha,xmin,beta):
-#    a, xm, b = alpha, xmin, beta
+def quantile(q, alpha,xmin,beta):
+    return general_quantile(q,cdf,*parameters)
 
 
 

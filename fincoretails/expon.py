@@ -1,5 +1,12 @@
 import numpy as np
 
+def fit_params(data):
+    lam = rate(data)
+    return (lam,)
+
+def loglikelihood(data, *parameters):
+    return np.sum(loglikelihoods(data, *parameters))
+
 def rate(data):
     mu = np.mean(data)
     return 1/mu
