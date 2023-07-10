@@ -64,14 +64,14 @@ def inverse_normal_cdf_approx(x):
 
 
 if __name__=="__main__":
-    import lognormal
+    from fincoretails import lognormal
     from bfmplot.tools import get_inset_axes
     import powerlaw
-    import nonpathpareto as npow
-    import expo
+    from fincoretails import fincorepareto as npow
+    from fincoretails import expon as expo
 
 
-    data = np.loadtxt('first_week_C_observations.txt')
+    data = np.loadtxt('/Users/bfmaier/forschung/2023-Leo-Master/data/first_week_C_observations.txt')
     data = np.round(data)
     data = np.array(data,dtype=int)
     old_data = np.array(data)
