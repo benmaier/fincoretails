@@ -55,18 +55,20 @@ print("\n\n\n=======general nonpath pareto=======\n")
 print("\nmean x ========")
 mean = prep(xleft+xright)
 sy.pprint(mean)
-print(mean)
+print(sy.latex(mean))
 
 print("\n<x^2> ========")
 x2 = prep(x2left+x2right)
 sy.pprint(x2)
-print(x2)
+print(sy.latex(x2))
 
 print("\n<Pcrit> ========")
 sy.pprint(prep(Pcrit))
 
 print("\nCDF ========")
-sy.pprint(pw_dist(CDFleft,CDFright))
+p = pw_dist(CDFleft,CDFright)
+sy.pprint(p)
+print(sy.latex(p))
 
 print("\n\n\n=======forced alg pareto=======\n")
 print("============ mean x ========")
@@ -129,11 +131,13 @@ CDFright = prep(Pcrit + sy.integrate(right, (x, y, X)))
 print("============ mean x ========")
 mean = prep(xleft+xright)
 sy.pprint(mean)
+print(sy.latex(mean))
 
 print("============  <x^2> ========")
 x2 = prep(x2left+x2right)
 sy.pprint(x2)
 print(x2)
+print(sy.latex(x2))
 
 
 print("\n<Pcrit> ========")
@@ -150,3 +154,8 @@ sy.pprint(CDFleft)
 print(CDFleft)
 sy.pprint(CDFright)
 print(CDFright)
+
+p = pw_dist(CDFleft,CDFright)
+
+sy.pprint(p)
+print(sy.latex(p))
