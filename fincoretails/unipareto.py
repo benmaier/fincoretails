@@ -2,6 +2,12 @@ import numpy as np
 import matplotlib.pyplot as pl
 from scipy.stats import pareto
 
+from fincoretails.fincorepareto import (
+        pdf as general_pdf,
+        cdf as general_cdf,
+        get_normalization_constant as general_normalization_constant,
+    )
+
 def fit_params(data, minxmin=1.000_001):
     a, xm, logLL = alpha_xmin_and_log_likelihood(data, minxmin=minxmin)
     return a, xm
@@ -10,33 +16,13 @@ def loglikelihood(data, *parameters):
     return np.sum(loglikelihoods(data, *parameters))
 
 def get_normalization_constant(alpha, xmin):
-    """"""
-    beta = 0
-    assert(xmin>0)
-    assert(alpha>1)
-    assert(beta>=0)
-    C = (alpha-1)*(beta+1) / xmin / (2*alpha*beta-beta+alpha)
-    return C
+    return general_normalization_constant(alpha, xmin, alpha)
 
 def pdf(x, alpha, xmin):
-    """"""
+    return general_pdf(x, alpha, xmin, beta=0)
 
-    beta = 0
-
-    C = get_normalization_constant(alpha, xmin)
-    if hasattr(x, '__len__'):
-        x = np.array(x)
-        cond = x<=xmin
-        i0 = np.where(cond)[0]
-        i1 = np.where(np.logical_not(cond))[0]
-        result = np.zeros_like(x,dtype=float)
-        result[i0] = C * (2-(x[i0]/xmin)**beta)
-        result[i1] = C * (xmin/x[i1])**alpha
-    else:
-        if x <= xmin:
-            return C * (2-(x/xmin)**beta)
-        else:
-            return C * (xmin/x)**alpha
+def cdf(x, alpha, xmin):
+    return general_cdf(x, alpha, xmin, beta=0)
 
 def loglikelihoods(data, alpha, xmin):
     return np.log(pdf(data, alpha, xmin))
@@ -113,30 +99,11 @@ def second_moment(*args,**kwargs):
 def neighbor_degree(*args,**kwargs):
     return second_moment(*args,**kwargs)/mean(*args,**kwargs)
 
-def cdf(x,alpha,xmin):
-    beta = 0
-    C = get_normalization_constant(alpha, xmin, beta)
-    Pcrit = C*xmin * (2-1/(beta+1))
-    if hasattr(x, '__len__'):
-        x = np.array(x)
-        cond = x<=xmin
-        i0 = np.where(cond)[0]
-        i1 = np.where(np.logical_not(cond))[0]
-        return np.concatenate([
-                C*x[i0]* (2-1/(beta+1)*(x[i0]/xmin)**beta),
-                C*xmin/(alpha-1) * (1-(xmin/x[i1])**(alpha-1)) + Pcrit
-            ])
-    else:
-        if x <= xmin:
-            return C*x * (2-1/(beta+1)*(x/xmin)**beta)
-        else:
-            return C*xmin/(alpha-1) * (1-(xmin/x)**(alpha-1)) + Pcrit
-
 def ccdf(x, *args,**kwargs):
     return 1-cdf(x, *args,**kwargs)
 
-def quantile(q, alpha,xmin,beta):
-    return general_quantile(q,cdf,*parameters)
+def quantile(q,alpha,xmin,beta):
+    return general_quantile(q,cdf,alpha,xmin,beta)
 
 
 

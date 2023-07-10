@@ -16,7 +16,7 @@ right = C * (y/x)**a
 C_ = (a - 1)*(b+1)/(2*a*b - b + a)/y
 
 def rep(expr,replace_b_with=beta):
-    expr = expr.replace(C,C_)
+    #expr = expr.replace(C,C_)
     expr = expr.replace(a_,alpha-3)
     expr = expr.replace(b, beta)
     expr = expr.replace(beta,replace_b_with)
@@ -104,6 +104,12 @@ print("left=")
 sy.pprint(prep(CDFleft,replace_b_with=0))
 print("right=")
 sy.pprint(prep(CDFright,replace_b_with=0))
+
+
+
+
+
+
 print("\n\n\n            exp pareto=======\n")
 
 #C_ = alpha*(alpha-1)/y/(1+(alpha-1)*sy.exp(alpha))
@@ -115,6 +121,9 @@ xright = sy.integrate(right*x, (x,y,sy.oo))
 x2left = sy.integrate(left*x**2, (x,0,y))
 x2right = sy.integrate(right*x**2, (x,y,sy.oo))
 
+Pcrit = sy.integrate(left, (x,0,y))
+CDFleft = prep(sy.integrate(left, (x, 0, X)))
+CDFright = prep(Pcrit + sy.integrate(right, (x, y, X)))
 print("============ mean x ========")
 mean = prep(xleft+xright)
 sy.pprint(mean)
@@ -122,4 +131,15 @@ sy.pprint(mean)
 print("============  <x^2> ========")
 x2 = prep(x2left+x2right)
 sy.pprint(x2)
+
+
+print("\n<Pcrit> ========")
+sy.pprint(prep(Pcrit))
+
+print("\nCDF ========")
+print("left=")
+sy.pprint(prep(CDFleft))
+print("right=")
+sy.pprint(prep(CDFright))
+
 

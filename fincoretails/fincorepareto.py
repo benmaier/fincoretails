@@ -23,38 +23,18 @@ def fit_params(data, beta=None, beta_initial_values=(0.,3.)):
                 curr_logLL = logLL
         return curr_tuple
 
+def loglikelihoods(data, alpha, xmin, beta):
+    return np.log(pdf(data, alpha, xmin, beta))
+
 def loglikelihood(data, *parameters):
     return np.sum(loglikelihoods(data, *parameters))
 
 def get_normalization_constant(alpha, xmin, beta):
-    """"""
     assert(xmin>0)
     assert(alpha>1)
     assert(beta>=0)
     C = (alpha-1)*(beta+1) / xmin / (2*alpha*beta-beta+alpha)
     return C
-
-def pdf(x, alpha, xmin, beta):
-    """"""
-
-    C = get_normalization_constant(alpha, xmin, beta)
-    if hasattr(x, '__len__'):
-        x = np.array(x)
-        cond = x<=xmin
-        i0 = np.where(cond)[0]
-        i1 = np.where(np.logical_not(cond))[0]
-        result = np.zeros_like(x,dtype=float)
-        result[i0] = C * (2-(x[i0]/xmin)**beta)
-        result[i1] = C * (xmin/x[i1])**alpha
-        return result
-    else:
-        if x <= xmin:
-            return C * (2-(x/xmin)**beta)
-        else:
-            return C * (xmin/x)**alpha
-
-def loglikelihoods(data, alpha, xmin, beta):
-    return np.log(pdf(data, alpha, xmin, beta))
 
 def sample(Nsample, alpha, xmin, beta):
 
@@ -197,29 +177,68 @@ def alpha_xmin_beta_logLL(data,beta0=2):
 #def neighbor_degree(*args,**kwargs):
 #    return second_moment(*args,**kwargs)/mean(*args,**kwargs)
 
-def cdf(x,alpha,xmin,beta):
-    C = get_normalization_constant(alpha, xmin, beta)
-    Pcrit = C*xmin * (2-1/(beta+1))
-    if hasattr(x, '__len__'):
-        x = np.array(x)
-        cond = x<=xmin
-        i0 = np.where(cond)[0]
-        i1 = np.where(np.logical_not(cond))[0]
-        result = np.zeros_like(x)
-        result[i0] = C*x[i0]* (2-1/(beta+1)*(x[i0]/xmin)**beta)
-        result[i1] = C*xmin/(alpha-1) * (1-(xmin/x[i1])**(alpha-1)) + Pcrit
-        return result
-    else:
-        if x <= xmin:
-            return C*x * (2-1/(beta+1)*(x/xmin)**beta)
-        else:
-            return C*xmin/(alpha-1) * (1-(xmin/x)**(alpha-1)) + Pcrit
+#def quantile(q, alpha,xmin,beta):
+#    a, xm, b = alpha, xmin, beta
 
 def ccdf(x, *args,**kwargs):
     return 1-cdf(x, *args,**kwargs)
 
-#def quantile(q, alpha,xmin,beta):
-#    a, xm, b = alpha, xmin, beta
+def pdf_left(x, alpha, xmin, beta, C=None):
+    if C is None:
+        C = get_normalization_constant(alpha, xmin, beta)
+    return C * (2-(x/xmin)**beta)
+
+def pdf_right(x, alpha, xmin, beta, C):
+    if C is None:
+        C = get_normalization_constant(alpha, xmin, beta)
+    return C * (xmin/x)**alpha
+
+def pdf(x, alpha, xmin, beta):
+    """"""
+    C = get_normalization_constant(alpha, xmin, beta)
+    result = np.piecewise(x,
+                          (
+                              x<0,
+                              x<=xmin,
+                              x>xmin
+                          ),
+                          (
+                              lambda x, *args: 0,
+                              pdf_left,
+                              pdf_right,
+                          ),
+                          alpha, xmin, beta, C,
+                         )
+    return result
+
+def cdf_left(x, alpha, xmin, beta, C=None):
+    if C is None:
+        C = get_normalization_constant(alpha, xmin, beta)
+    return C*x * (2-1/(beta+1)*(x/xmin)**beta)
+
+def cdf_right(x, alpha, xmin, beta, C=None):
+    if C is None:
+        C = get_normalization_constant(alpha, xmin, beta)
+    Pcrit = C*xmin * (2-1/(beta+1))
+    return C*xmin/(alpha-1) * (1-(xmin/x)**(alpha-1)) + Pcrit
+
+def cdf(x, alpha, xmin, beta):
+    """"""
+    C = get_normalization_constant(alpha, xmin, beta)
+    result = np.piecewise(x,
+                          (
+                              x<0,
+                              x<=xmin,
+                              x>xmin
+                          ),
+                          (
+                              lambda x, *args: 0,
+                              cdf_left,
+                              cdf_right,
+                          ),
+                          alpha, xmin, beta, C,
+                         )
+    return result
 
 
 
@@ -232,7 +251,7 @@ if __name__=="__main__":
     import powerlaw
 
 
-    data = np.loadtxt('first_week_C_observations.txt')
+    data = np.loadtxt('/Users/bfmaier/forschung/2023-Leo-Master/data/subproject_estimate_powerlaw/first_week_C_observations.txt')
     data = np.round(data)
     data = np.array(data,dtype=int)
 

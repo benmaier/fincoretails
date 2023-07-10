@@ -15,24 +15,24 @@ def fit_params(data, N, minxmin=4):
 def loglikelihood(data, *parameters):
     return np.sum(loglikelihoods(data, *parameters))
 
-def pdf(x, alpha, xmin):
-    ea = np.exp(alpha)
-    C = alpha*(alpha-1) / xmin / (1+(alpha-1)*ea)
-    if hasattr(x, '__len__'):
-        x = np.array(x)
-        cond = x<=xmin
-        i0 = np.where(cond)[0]
-        i1 = np.where(np.logical_not(cond))[0]
-        result = np.zeros_like(x,dtype=float)
-        result[i0] = C * np.exp(-alpha*(x[i0]/xmin - 1))
-        result[i1] = C * (xmin/x[i1])**alpha
-    else:
-        if x <= xmin:
-            return C * np.exp(-alpha*(x/xmin - 1))
-        else:
-            return C * (xmin/x)**alpha
+def loglikelihoods(data, *parameters):
+    return np.log(pdf(data, *parameters))
 
-def sample(alpha, xmin, Nsample):
+def get_normalization_constant(alpha,xmin):
+    assert(alpha > 1)
+    assert(xmin>0)
+    y = xmin
+    a = alpha
+    ea = np.exp(a)
+    C = a*(a-1) / y / (1+(a-1)*ea)
+    return C
+
+def Pcrit(alpha,xmin,C=None):
+    if C is None:
+        C = get_normalization_constant(alpha,xmin)
+    return C*xmin/alpha * (np.exp(alpha)-1)
+
+def sample(Nsample, alpha, xmin):
     assert(xmin>0)
     assert(alpha>1)
     y = xmin
@@ -40,9 +40,9 @@ def sample(alpha, xmin, Nsample):
 
     ea = np.exp(a)
     C = a*(a-1) / y / (1+(a-1)*ea)
-    Pcrit = C*y/a * (ea-1)
+    P = Pcrit(alpha,xmin,C)
     u = np.random.rand(Nsample)
-    ndx = np.where(u<Pcrit)[0]
+    ndx = np.where(u<P)[0]
     Nlow = len(ndx)
     ulow = u[ndx]
 
@@ -54,7 +54,7 @@ def sample(alpha, xmin, Nsample):
     np.random.shuffle(samples)
     return samples
 
-def alpha_and_log_likelihood_fixed_xmin(data, xmin, a0=1.8):
+def alpha_and_log_likelihood_fixed_xmin(data, xmin, a0=1.5):
     n = len(data)
     Lambda = data[np.where(data>xmin)[0]]
     Eta = data[np.where(data<=xmin)[0]]
@@ -131,19 +131,85 @@ def alpha_xmin_and_log_likelihood(data, minxmin=6):
     return alpha, xmincand, logLL
 
 
+def pdf_left(x, alpha, xmin, C=None):
+    if C is None:
+        C = get_normalization_constant(alpha, xmin)
+    return C * np.exp(-alpha*(x/xmin - 1))
+
+def pdf_right(x, alpha, xmin, C=None):
+    if C is None:
+        C = get_normalization_constant(alpha, xmin)
+    return C * (xmin/x)**alpha
+
+def pdf(x, alpha, xmin):
+    """"""
+    C = get_normalization_constant(alpha, xmin)
+    result = np.piecewise(x,
+                          (
+                              x<0,
+                              x<=xmin,
+                              x>xmin
+                          ),
+                          (
+                              lambda x, *args: 0,
+                              pdf_left,
+                              pdf_right,
+                          ),
+                          alpha, xmin, C,
+                         )
+    return result
+
+def cdf_left(x, alpha, xmin, C=None):
+    if C is None:
+        C = get_normalization_constant(alpha, xmin)
+    return C*xmin/alpha * np.exp(alpha) * (1-np.exp(-alpha*x))
+
+def cdf_right(x, alpha, xmin, C=None):
+    if C is None:
+        C = get_normalization_constant(alpha, xmin)
+    P = Pcrit(alpha,xmin,C)
+    return C*xmin/(alpha-1) * (1-(xmin/x)**(alpha-1)) + P
+
+def cdf(x, alpha, xmin):
+    """"""
+    C = get_normalization_constant(alpha, xmin)
+    result = np.piecewise(x,
+                          (
+                              x<0,
+                              x<=xmin,
+                              x>xmin
+                          ),
+                          (
+                              lambda x, *args: 0,
+                              cdf_left,
+                              cdf_right,
+                          ),
+                          alpha, xmin, C,
+                         )
+    return result
+
+
+
+
 if __name__=="__main__":
 
-    dataset = 'sample'
+    dataset = 'contacts'
     if dataset == 'contacts':
-        data = np.loadtxt('first_week_C_observations.txt')
+        data = np.loadtxt('/Users/bfmaier/forschung/2023-Leo-Master/data/first_week_C_observations.txt')
         data = np.round(data)
         data = np.array(data,dtype=int)
     elif dataset == 'sample':
         alphatrue = 2
+        Nsample = 10_000
         xmintrue = 10
-        data = sample(alphatrue,xmintrue,1001)
+        data = sample(Nsample,alphatrue,xmintrue)
         print(f"{data.min()=}")
 
+        _dens,_be,_ = pl.hist(data,np.logspace(-1,5,101),density=True)
+        pl.plot(_be, pdf(_be, alphatrue, xmintrue))
+        pl.xscale('log')
+        pl.yscale('log')
+        pl.show()
 
     xmins = np.linspace(4,40,2001)
 
