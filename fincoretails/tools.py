@@ -4,12 +4,34 @@ from scipy.optimize import brentq
 
 def loglikelihood_ratio(loglikelihoodsA, loglikelihoodsB, normalized_ratio=True):
     """
+    Compute the log-likelihood ratio and the significance level.
     Return the log-likelihood ratio R and the probability p
     that a random sample from a normally distributed R-value
     distribution would be larger or equal to the computed
-    R-value. Typically, one classifies the R-value as ``significant''
-    if p < 0.05, but also please use your brain more than
-    just checking p < 0.05.
+    R-value.
+
+    Parameters
+    ----------
+    loglikelihoodsA : array-like
+        Log-likelihoods under null hypothesis.
+    loglikelihoodsB : array-like
+        Log-likelihoods under alternative hypothesis.
+    normalized_ratio : bool, optional, default = True
+        If True (default), return the normalized log-likelihood ratio.
+
+    Returns
+    -------
+    R : float
+        The log-likelihood ratio. It is normalized if `normalized_ratio` is True.
+    p : float
+        The significance level, i.e., the probability that a random sample
+        from a normally distributed R-value distribution would be larger or
+        equal to the computed R-value.
+
+    Notes
+    -----
+    Typically, one classifies the R-value as 'significant' if p < 0.05. However,
+    also consider the context of the problem rather than strictly following this rule.
     """
 
     llA, llB = loglikelihoodsA, loglikelihoodsB
@@ -41,9 +63,9 @@ def general_quantile(q, cdf, *parameters, left=0, right=1000):
         The cumulative distribution function.
     *parameters :
         The parameters of the distribution.
-    left : float, optional
+    left : float, optional, default = 0
         The lower bound of the interval for the root-finding algorithm. Default is 0.
-    right : float, optional
+    right : float, optional, default = 1000
         The upper bound of the interval for the root-finding algorithm. Default is 1000.
 
     Returns
@@ -76,9 +98,36 @@ def general_quantile(q, cdf, *parameters, left=0, right=1000):
     return quantile
 
 def aic(logLL, number_of_free_parameters, nsamples=None):
+    """
+    Compute the Akaike Information Criterion (AIC).
+
+    Parameters
+    ----------
+    logLL : float
+        The log-likelihood.
+    number_of_free_parameters : int
+        The number of free parameters in the model.
+    nsamples : int, optional, default = None
+        The number of samples. If not provided or if the sample size is too small,
+        the function will return the regular AIC.
+
+    Returns
+    -------
+    AIC : float
+        The Akaike Information Criterion.
+
+    Notes
+    -----
+    If the number of samples and the number of free parameters are large enough,
+    the function will return the corrected AIC.
+    """
+
+    # Compute the regular AIC
     k = number_of_free_parameters
     n = nsamples
     AIC = 2*(number_of_free_parameters - logLL)
+
+    # return the corrected AIC, only if number of samples has been given however.
     if n is None or n-k-1 <= 0:
         return AIC
     else:
