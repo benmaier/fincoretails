@@ -8,7 +8,7 @@ from fincoretails.tools import general_quantile
 def quantile(q, *parameters):
     return general_quantile(q, cdf, *parameters)
 
-def fit_params(data,beta_initial_values=(1.,),minxmin=0,maxxmin=None):
+def fit_params(data,beta_initial_values=(1.,),minxmin=None,maxxmin=None):
     a, xm, beta, logLL = alpha_xmin_beta_and_log_likelihood(data, beta0=beta_initial_values,minxmin=minxmin,maxxmin=maxxmin)
     return a, xm, beta
 
@@ -181,7 +181,7 @@ def alpha_xmin_beta_and_log_likelihood(data, beta0=[2.,],stop_at_first_max=False
 
         alpha, xmincand, beta, logLL = alpha_xmin_beta_and_log_likelihood_fixed_xmin_index(data,j,xmins,beta0=thesebetas)
 
-        if logLL0 is not None and logLL0 > logLL:
+        if logLL0 is not None and logLL is not None and logLL0 > logLL:
             alpha = a0
             beta = b0
             xmincand = xj
@@ -260,19 +260,9 @@ def cdf(x, alpha, xmin, beta):
 
     return result
 
-def mean(alpha,xmin):
-    assert(alpha > 2)
-    xm = xmin
-    return xm*alpha*(alpha - 1)*(6*alpha + (alpha - 3)**2 - (alpha - 2)*(alpha - np.exp(alpha) + 1) - 9)/((alpha - 2)*((alpha - 1)*np.exp(alpha) + 1)*(6*alpha + (alpha - 3)**2 - 9))
-
-def median(alpha,xmin):
-    a, xm = alpha, xmin
-    return quantile(0.5, a, xm)
-
-def second_moment(alpha,xmin):
-    assert(alpha > 3)
-    xm = xmin
-    return xm**2*(alpha**3 + 2*alpha**2*np.exp(alpha) + 3*alpha**2 - 8*alpha*np.exp(alpha) + 2*alpha + 6*np.exp(alpha) - 6)/(alpha**2*(alpha**2*np.exp(alpha) - 4*alpha*np.exp(alpha) + alpha + 3*np.exp(alpha) - 3))
+def median(alpha,xmin,beta):
+    a, xm, b = alpha, xmin, beta
+    return quantile(0.5, a, xm, b)
 
 def variance(*args,**kwargs):
     return second_moment(*args,**kwargs) - mean(*args,**kwargs)**2
@@ -281,19 +271,35 @@ def neighbor_degree(*args,**kwargs):
     return second_moment(*args,**kwargs)/mean(*args,**kwargs)
 
 
+def mean(alpha,xmin,beta):
+    assert(alpha > 2)
+    y = xmin
+    a = alpha
+    b = beta
+    eb = np.exp(b)
+    return (1/b + (-b + a*(2 - a + b))/((-2 + a)*(1 - a + b + (-1 + a)*eb)))*y
+
+def second_moment(alpha,xmin,beta):
+    assert(alpha > 3)
+    y = xmin
+    a = alpha
+    b = beta
+    eb = np.exp(b)
+    return ((-1 + a)*(6 + b*(6 + b*(3 + b)) - 6*eb + a*(-2 - b*(2 + b) + 2*eb))*y**2)/\
+            ((-3 + a)*b**2*(1 - a + b + (-1 + a)*eb))
 
 
 if __name__=="__main__":
 
     dataset = 'sample'
-    if dataset == 'sample':
+    if dataset == 'contacts':
         data = np.loadtxt('/Users/bfmaier/forschung/2023-Leo-Master/data/first_week_C_observations.txt')
         data = np.round(data)
         data = np.array(data,dtype=int)
         #data = data[data>0]
     elif dataset == 'sample':
         np.random.seed(20)
-        alphatrue = 2
+        alphatrue = 4
         betatrue = -3
         Nsample = 10_000
         xmintrue = 10
@@ -302,13 +308,13 @@ if __name__=="__main__":
         #print(f"{cdf(1000.,alphatrue,xmintrue,betatrue)=}")
         #print(f"{data.min()=}")
         #print()
-        #print(f"{data.mean()=}")
-        #print(f"{data.std()**2=}")
-        #print(f"{np.median(data)=}")
+        print(f"{data.mean()=}")
+        print(f"{data.std()**2=}")
+        print(f"{np.median(data)=}")
 
-        #print(f"{mean(alphatrue,xmintrue)=}")
-        #print(f"{variance(alphatrue,xmintrue)=}")
-        #print(f"{median(alphatrue,xmintrue)=}")
+        print(f"{mean(alphatrue,xmintrue,betatrue)=}")
+        print(f"{variance(alphatrue,xmintrue,betatrue)=}")
+        print(f"{median(alphatrue,xmintrue,betatrue)=}")
 
         _dens,_be,_ = pl.hist(data,np.logspace(-1,3,101),density=True)
         pl.plot(_be, pdf(_be, alphatrue, xmintrue, betatrue))
