@@ -4,13 +4,14 @@ from scipy.stats import pareto
 from scipy.optimize import newton, minimize, brentq
 
 from fincoretails.tools import general_quantile
-from fincoretails.general_algpareto import (
+from fincoretails.general_powpareto import (
         pdf as general_pdf,
         cdf as general_cdf,
         get_normalization_constant as general_normalization_constant,
         mean as general_mean,
         variance as general_variance,
         median as general_median,
+        sample as general_sample,
     )
 
 def quantile(q, *parameters):
@@ -33,121 +34,10 @@ def loglikelihood(data, *parameters):
     return np.sum(loglikelihoods(data, *parameters))
 
 def loglikelihoods(data, alpha, xmin):
-    return np.log(pdf(data, alpha, xmin))
+    return np.log(pdf(data, alpha, xmin, alpha))
 
 def sample(Nsample, alpha, xmin):
-
-    beta = alpha
-    C = get_normalization_constant(alpha, xmin)
-    Pcrit = C*xmin*(2-1/(beta+1))
-
-    u = np.random.rand(Nsample)
-    ndx = np.where(u<=Pcrit)[0]
-    Nlow = len(ndx)
-    ulow = u[ndx]
-
-    xlow = []
-    for v in ulow:
-        F = lambda x: C*x*(2-1/(beta+1)*(x/xmin)**beta) - v
-        xl = brentq(F, 0, xmin)
-        xlow.append(xl)
-
-
-    Nrest = Nsample - Nlow
-    xhigh = pareto(alpha-1,scale=xmin).rvs(Nrest)
-    samples = np.concatenate([xlow,xhigh])
-    np.random.shuffle(samples)
-    return samples
-
-def alpha_and_log_likelihood_fixed_xmin(data, xmin,alpha0=1.5):
-    n = len(data)
-    Lambda = data[np.where(data>xmin)[0]]
-    Eta = data[np.where(data<=xmin)[0]]
-    nL = len(Lambda)
-    nH = len(Eta)
-    L = np.mean(np.log(Lambda/xmin))
-
-    def dlogLLda(a):
-        H = np.mean(np.log(Eta/xmin) / (2*(Eta/xmin)**(-a)-1))
-        return -nL *L + 2*n*a/(a**2-1) - 2*n/a - nH * H
-
-    try:
-        anew = newton(dlogLLda, alpha0)
-    except ValueError as e:
-        return None, None
-    except RuntimeError as e:
-        return None, None
-
-    a = anew
-    C = get_normalization_constant(a, xmin)
-    logLL = n*np.log(C) - a*nL*L + nH * np.mean(np.log(2-(Eta/xmin)**a))
-
-    return a, logLL
-
-def alpha_xmin_and_log_likelihood_fixed_xmin_index(data, j, a0, xmins=None):
-
-    if xmins is None:
-        xmins = np.sort(np.unique(data))
-
-    n = len(data)
-
-    xleft = xmins[j]
-    xright = xmins[j+1]
-
-    Lambda = data[np.where(data>xleft)[0]]
-    Eta = data[np.where(data<=xleft)[0]]
-    #EtaPrime = data[np.where(data<xleft)[0]]
-    nL = len(Lambda)
-    nH = len(Eta)
-    L = np.mean(np.log(Lambda))
-
-    def minusloglikeli(params):
-        a, x = params
-        C = get_normalization_constant(a,x)
-        H = np.mean(np.log(2-(Eta/x)**a))
-        L_ = L - np.log(x)
-        return - (n*np.log(C) - a * nL * L_ + nH * H)
-
-    try:
-        res = minimize(minusloglikeli,
-                       x0=[a0,0.5*(xleft+xright)],
-                       bounds=[(1.0001,np.inf),(xleft, xright)],
-                       )
-    except ValueError as e:
-        return None, None, None
-
-    a, x = res.x
-
-    logLL = -minusloglikeli(res.x)
-
-    return a, x, logLL
-
-def alpha_xmin_and_log_likelihood(data, minxmin=1.001, alpha0=2):
-
-    n = len(data)
-    xmins = np.sort(np.unique(data))
-    xmins = xmins[xmins>=minxmin]
-
-    maxLogLL = -np.inf
-    alphas, nLs, Ls, logLLs = [], [],[], []
-    sampled_xmins = []
-
-    for j, xj in enumerate(xmins):
-        a, xmincand, logLL = alpha_xmin_and_log_likelihood_fixed_xmin_index(data,j,alpha0,xmins)
-        alphas.append(a)
-        logLLs.append(logLL)
-        sampled_xmins.append(xmincand)
-
-        if logLL > maxLogLL:
-            maxLogLL = logLL
-        else:
-            break
-
-
-    current_max_tuple = alphas[j-1], sampled_xmins[j-1], logLLs[j-1]
-
-    return current_max_tuple
-
+    return general_sample(Nsample, alpha, xmin, alpha)
 
 def ccdf(x, *args,**kwargs):
     return 1-cdf(x, *args,**kwargs)
@@ -170,6 +60,111 @@ def second_moment(*args,**kwargs):
 def neighbor_degree(*args,**kwargs):
     return second_moment(*args,**kwargs)/mean(*args,**kwargs)
 
+def alpha_and_log_likelihood_fixed_xmin(data, xmin, a0=2):
+    n = len(data)
+
+    Lambda = data[np.where(data>xmin)[0]]
+    Eta = data[np.where(data<=xmin)[0]]
+    logL = np.mean(np.log(Lambda))
+    logH = np.mean(np.log(Eta))
+    logy = np.log(xmin)
+    nL = len(Lambda)
+    nH = len(Eta)
+
+    Sqrt = np.sqrt
+    logXoY = logL - logy
+    logYoS = logy - logH
+
+    offs = -nL*logXoY - (n - nL) *logYoS
+    z = lambda a: (n*(1 + a**2))/(-a + a**3) + offs
+    zPrime = lambda a: -((n*(-1 + 4*a**2 + a**4))/(a**2*(-1 + a**2)**2))
+
+    try:
+        a = newton(z,a0,zPrime)
+    except RuntimeError as e:
+        return None, None
+
+    hata = np.nan
+    logLL = np.nan
+    if a > 1:
+        C = get_normalization_constant(a, xmin)
+        logLL = n*np.log(C) - nL*a*logXoY - nH*a*logYoS
+        hata = a
+
+    return hata, logLL
+
+def alpha_xmin_and_log_likelihood_fixed_xmin_index(data, j, xmins=None):
+
+    if xmins is None:
+        xmins = np.sort(np.unique(data))
+
+    n = len(data)
+
+    xleft = xmins[j]
+    xright = xmins[j+1]
+
+    Lambda = data[np.where(data>xleft)[0]]
+    Eta = data[np.where(data<=xleft)[0]]
+    logH = np.mean(np.log(Eta))
+    logL = np.mean(np.log(Lambda))
+    nL = len(Lambda)
+    nH = len(Eta)
+
+
+    a = n/(2*nL-n)
+    logy = 1 - n**2/(2*n*nL - 2*nL**2) + ((n - nL)*logH - nL*logL)/(n - 2*nL)
+    y = np.exp(logy)
+
+    if not np.isnan(a) and a > 1 and y>0:
+        C = get_normalization_constant(a,y)
+        logLL = n*np.log(C) - nL*a*(logL-logy) - nH*a*(logy-logH)
+
+        _a, _logLL = alpha_and_log_likelihood_fixed_xmin(data, xleft,a0=a)
+
+        if _logLL is not None:
+            if (_logLL > logLL) or (a < 1) or (y<xleft) or (y>=xright):
+                return _a, xleft, _logLL
+        elif a>1 and y>=xleft and y<xright:
+            return a, y, logLL
+        else:
+            return None, None, None
+    else:
+        _a, _logLL = alpha_and_log_likelihood_fixed_xmin(data, xleft)
+        return _a, xleft, _logLL
+
+
+
+def alpha_xmin_and_log_likelihood(data, stop_at_first_max=False,minxmin=None,maxxmin=None):
+
+    n = len(data)
+    xmins = np.sort(np.unique(data))
+
+    if minxmin is None:
+        minxmin = xmins[0]
+    xmins = xmins[xmins>minxmin]
+    if maxxmin is not None:
+        xmins = xmins[xmins<=maxxmin]
+
+    maxlogLL = -np.inf
+    hatalpha = np.nan
+    hatxmin = np.nan
+    for j, xj in enumerate(xmins[:-1]):
+
+        alpha, xmincand, logLL = alpha_xmin_and_log_likelihood_fixed_xmin_index(data,j,xmins)
+
+        if alpha is None:
+            continue
+
+        if xmincand >= xmins[j] and xmincand <xmins[j+1] and logLL > maxlogLL:
+            hatxmin = xmincand
+            hatalpha = alpha
+            hatlogLL = logLL
+            maxlogLL = logLL
+
+            if stop_at_first_max:
+                break
+
+    return hatalpha, hatxmin, maxlogLL
 
 
 
@@ -179,19 +174,20 @@ if __name__=="__main__":
     from bfmplot.tools import get_inset_axes
     import powerlaw
 
-
     data = np.loadtxt('/Users/bfmaier/forschung/2023-Leo-Master/data/first_week_C_observations.txt')
+
     data = np.round(data)
     data = np.array(data,dtype=int)
 
     betas = [0]
-    xmin0 = 6
+    xmin0 = 10
     alpha0 = 1.9
     Nsample = 8001
-    datasets = [data]
+    datasets = []
 
 
-    datasets_names = ['real world contact data']
+    #datasets_names = ['real world contact data']
+    datasets_names = []
 
     for ibeta, beta in enumerate(betas):
         datasets.append(sample(Nsample, alpha0, xmin0))
@@ -199,7 +195,7 @@ if __name__=="__main__":
 
 
 
-    xmins = np.linspace(1.1,12,1001)
+    xmins = np.linspace(2,12,1001)
 
     for idata, (data, name) in enumerate(zip(datasets, datasets_names)):
 
@@ -207,14 +203,14 @@ if __name__=="__main__":
         axs = axs.reshape(3,1)
         fig.suptitle(name)
 
-        fit = powerlaw.Fit(data)
-        print(np.sum(fit.lognormal.loglikelihoods(data)))
-        print(f"{fit.power_law.alpha=}")
-        print(f"{fit.power_law.xmin=}")
-        print(f"{lognormal.logLL(data)=}")
-        print(f"{lognormal.mu_and_sigma(data)=}")
-        print(f"{fit.lognormal.mu=}")
-        print(f"{fit.lognormal.sigma=}")
+        #fit = powerlaw.Fit(data)
+        #print(np.sum(fit.lognormal.loglikelihoods(data)))
+        #print(f"{fit.power_law.alpha=}")
+        #print(f"{fit.power_law.xmin=}")
+        #print(f"{lognormal.logLL(data)=}")
+        #print(f"{lognormal.mu_and_sigma(data)=}")
+        #print(f"{fit.lognormal.mu=}")
+        #print(f"{fit.lognormal.sigma=}")
 
 
         print("=========", name)
@@ -235,7 +231,7 @@ if __name__=="__main__":
                 if maxLL is None:
                     maxLL = LL
                 else:
-                    if LL > maxLL:
+                    if LL is not None and LL > maxLL:
                         maxLL = LL
                         hatalpha = a
                         hatxmin = xmin
@@ -274,7 +270,7 @@ if __name__=="__main__":
             _ax.hist(data,be,density=True,alpha=0.5)
 
             x = np.logspace(np.log10(be[0]),np.log10(be[-1]),1001)
-            _ax.plot(x, pdf(x, a_,xmin_,))
+            #_ax.plot(x, pdf(x, a_,xmin_,))
 
             _ax.set_xscale('log')
             _ax.set_yscale('log')
@@ -290,17 +286,17 @@ if __name__=="__main__":
             iax.hist(data, be, density=True,alpha=0.5)
             iax.set_xlim(0,20)
             x = np.linspace(0,20,1001)
-            iax.plot(x, pdf(x, a_,xmin_))
+            #iax.plot(x, pdf(x, a_,xmin_))
             if not 'world' in name:
                 iax.plot(x, pdf(x, alpha0,xmin0))
 
-            ax[0].text(0.05,0.1,
-                       f"a = {a_:4.2f} \nxmin = {xmin_:4.2f}\n logLL={int(LL_):d}",
-                       transform=ax[0].transAxes,
-                       ha='left',
-                       va='bottom',
-                       backgroundcolor='w',
-                    )
+            #ax[0].text(0.05,0.1,
+            #           f"a = {a_:4.2f} \nxmin = {xmin_:4.2f}\n logLL={int(LL_):d}",
+            #           transform=ax[0].transAxes,
+            #           ha='left',
+            #           va='bottom',
+            #           backgroundcolor='w',
+            #        )
 
 
 
