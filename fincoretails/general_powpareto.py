@@ -266,9 +266,9 @@ if __name__=="__main__":
         #data = data[data>0]
     elif dataset == 'sample':
         np.random.seed(20)
-        alphatrue = 7
-        betatrue = 7
-        Nsample = 20_000
+        alphatrue = 3.1
+        betatrue = -0.5
+        Nsample = 10_000
         xmintrue = 10
         data = sample(Nsample,alphatrue,xmintrue, betatrue)
         print(f"{alphatrue=},{xmintrue=},{betatrue=}")
@@ -293,7 +293,7 @@ if __name__=="__main__":
         pl.yscale('log')
         #pl.show()
 
-    xmins = np.linspace(2,40,2001)
+    xmins = np.linspace(9.5,10.5,20_001)
 
     fig, ax = pl.subplots(3,1,figsize=(4,10),sharex=True)
     logLs = []
