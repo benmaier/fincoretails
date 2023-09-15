@@ -1,15 +1,15 @@
-from fincoretails import lognormal, fincorepareto, loglikelihood_ratio, aic
+from fincoretails import lognormal, general_algpareto, loglikelihood_ratio, aic
 
 alpha = 2
 xmin = 4.5
 beta = alpha
 Nsample = 10_000
-data = fincorepareto.sample(Nsample, alpha, xmin, beta)
+data = general_algpareto.sample(Nsample, alpha, xmin, beta)
 
-alpha, xmin, beta = fincorepareto.fit_params(data, beta_initial_values=(2.5,))
+alpha, xmin, beta = general_algpareto.fit_params(data, beta_initial_values=(2.5,))
 mu, sigma = lognormal.fit_params(data)
 
-ll_fcp = fincorepareto.loglikelihoods(data, alpha, xmin, beta)
+ll_fcp = general_algpareto.loglikelihoods(data, alpha, xmin, beta)
 ll_logn = lognormal.loglikelihoods(data, mu, sigma)
 logL_fcp = ll_fcp.sum()
 logL_logn = ll_logn.sum()

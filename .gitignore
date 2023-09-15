@@ -37,7 +37,7 @@ __pycache__
 .pytest_cache
 /htmlcov/
 
-/venv/
+/env/
 
 config.ini
 
