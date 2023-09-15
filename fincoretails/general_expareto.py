@@ -174,7 +174,7 @@ def alpha_xmin_beta_and_log_likelihood(data, beta0=[2.,],stop_at_first_max=False
 
         try:
             a0, b0, logLL0 = alpha_beta_and_log_likelihood_fixed_xmin(data, xj)
-            thesebetas = beta0 + [b0]
+            thesebetas = beta0 + (b0,)
         except RuntimeError as e:
             thesebetas = beta0
             logLL0 = None
@@ -288,6 +288,9 @@ def second_moment(alpha,xmin,beta):
     return ((-1 + a)*(6 + b*(6 + b*(3 + b)) - 6*eb + a*(-2 - b*(2 + b) + 2*eb))*y**2)/\
             ((-3 + a)*b**2*(1 - a + b + (-1 + a)*eb))
 
+
+def ccdf(x, *args,**kwargs):
+    return 1-cdf(x, *args,**kwargs)
 
 if __name__=="__main__":
 

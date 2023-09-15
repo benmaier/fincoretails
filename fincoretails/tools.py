@@ -132,3 +132,35 @@ def aic(logLL, number_of_free_parameters, nsamples=None):
         return AIC
     else:
         return AIC + 2*k*(k+1)/(n-k-1)
+
+def compute_ccdf(data):
+    """
+    This function takes in an array of data and returns two arrays (x, ccdf)
+    that represent the step-wise complementary cumulative distribution function (CCDF).
+
+    Parameters
+    ----------
+        data: numpy.ndarray
+            An array of positive random variates.
+
+    Returns
+    -------
+        x: numpy.ndarray
+            Sorted unique data.
+        ccdf: numpy.ndarray
+            CCDF of the data.
+    """
+    # Step 1: Sort the data in ascending order
+    sorted_data = np.sort(data)
+
+    # Step 2: Get the unique data values and their counts
+    unique, counts = np.unique(sorted_data, return_counts=True)
+
+    # Step 3: Calculate the cumulative counts
+    cum_counts = np.cumsum(counts)
+
+    # Step 4: Calculate the complementary cumulative distribution (CCDF)
+    ccdf = 1 - cum_counts / len(data)
+
+    return unique, ccdf
+

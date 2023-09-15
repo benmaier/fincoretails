@@ -5,6 +5,9 @@ from scipy.optimize import newton, brentq
 
 from fincoretails.tools import general_quantile
 
+def ccdf(x, *args,**kwargs):
+    return 1-cdf(x, *args,**kwargs)
+
 def quantile(q, *parameters):
     return general_quantile(q, cdf, *parameters)
 

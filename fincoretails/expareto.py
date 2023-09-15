@@ -5,10 +5,16 @@ from scipy.optimize import newton, brentq
 
 from fincoretails.tools import general_quantile
 
+def ccdf(x, *args,**kwargs):
+    return 1-cdf(x, *args,**kwargs)
+
+def ccdf(x, *args,**kwargs):
+    return 1-cdf(x, *args,**kwargs)
+
 def quantile(q, *parameters):
     return general_quantile(q, cdf, *parameters)
 
-def fit_params(data, N, minxmin=4):
+def fit_params(data, minxmin=1.001):
     a, xm, logLL = alpha_xmin_and_log_likelihood(data, minxmin=minxmin)
     return a, xm
 

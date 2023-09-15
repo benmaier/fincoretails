@@ -18,5 +18,8 @@ from .tools import (
         general_quantile,
         loglikelihood_ratio,
         aic,
+        compute_ccdf,
     )
+
+from .dists import distributions
 

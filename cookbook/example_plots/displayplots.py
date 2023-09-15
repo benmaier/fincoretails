@@ -35,13 +35,17 @@ if __name__ == "__main__":
 
     betas = [-0.5,1,2]
     betalabels = map(lambda x: 'β = '+x,['-1/2', '1','2'])
-    plot(ax[1], general_expareto, betas, betalabels)#,ylimlog=(1e-3,1))
+    plot(ax[1], general_expareto, betas, betalabels,ylimlog=(1e-3,0.5))
     ax[1].set_title('(b) exp-Pareto',loc='left')
 
     betas = [-0.5,1,2]
     betalabels = map(lambda x: 'β = '+x,['-1/2', '1','2'])
     plot(ax[0], general_powpareto, betas, betalabels, legloc=(0.09,0.65))
     ax[0].set_title('(a) pow-Pareto',loc='left')
+
+    for a in ax:
+        a.set_xticks([0,10,20,25])
+        a.set_yticks([0,0.05,0.1])
 
     fig.tight_layout()
 

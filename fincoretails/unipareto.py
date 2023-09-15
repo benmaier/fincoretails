@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as pl
 from scipy.stats import pareto
 
-from fincoretails.fincorepareto import (
+from fincoretails.general_algpareto import (
         pdf as general_pdf,
         cdf as general_cdf,
         get_normalization_constant as general_normalization_constant,
@@ -11,8 +11,8 @@ from fincoretails.fincorepareto import (
         median as general_median,
     )
 
-def fit_params(data, minxmin=1.000_001):
-    a, xm, logLL = alpha_xmin_and_log_likelihood(data, minxmin=minxmin)
+def fit_params(data):
+    a, xm, logLL = alpha_xmin_and_log_likelihood(data)
     return a, xm
 
 def loglikelihood(data, *parameters):

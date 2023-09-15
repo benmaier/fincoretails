@@ -67,7 +67,7 @@ if __name__=="__main__":
     from fincoretails import lognormal
     from bfmplot.tools import get_inset_axes
     import powerlaw
-    from fincoretails import fincorepareto as npow
+    from fincoretails import general_algpareto as npow
     from fincoretails import expon as expo
 
 

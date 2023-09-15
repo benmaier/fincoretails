@@ -17,8 +17,8 @@ from fincoretails.general_powpareto import (
 def quantile(q, *parameters):
     return general_quantile(q, cdf, *parameters)
 
-def fit_params(data, minxmin=1.001,alpha0=1.5):
-    a, xm, logLL = alpha_xmin_and_log_likelihood(data, minxmin=minxmin,alpha0=alpha0)
+def fit_params(data, minxmin=1.001):
+    a, xm, logLL = alpha_xmin_and_log_likelihood(data, minxmin=minxmin)
     return a, xm
 
 def get_normalization_constant(alpha, xmin):
@@ -34,7 +34,7 @@ def loglikelihood(data, *parameters):
     return np.sum(loglikelihoods(data, *parameters))
 
 def loglikelihoods(data, alpha, xmin):
-    return np.log(pdf(data, alpha, xmin, alpha))
+    return np.log(pdf(data, alpha, xmin))
 
 def sample(Nsample, alpha, xmin):
     return general_sample(Nsample, alpha, xmin, alpha)
@@ -109,6 +109,9 @@ def alpha_xmin_and_log_likelihood_fixed_xmin_index(data, j, xmins=None):
     logL = np.mean(np.log(Lambda))
     nL = len(Lambda)
     nH = len(Eta)
+
+    if nH == nL:
+        return None, None, None
 
 
     a = n/(2*nL-n)
