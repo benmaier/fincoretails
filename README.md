@@ -72,13 +72,13 @@ So far, the package's functionality was tested on Mac OS X and CentOS only.
 
 ## Documentation
 
-### Distributions, ``fincoretails.dists``
+### Distributions
 
 Every distribution is treated as a separate module in this package. There's one
 module that makes all these distributions accessible as a list. 
 
 ```python
-from fincoretails.distributions import dists
+from fincoretails import distributions
 ```
 
 will give you this list:
@@ -113,9 +113,18 @@ distributions = [
            ]
 ```
 
+
 We'll comment on each of them further below.
 
-Each distribution module contains similar functions, we'll list some here
+Each distribution module can also be imported as e.g.
+
+```python
+from fincoretails import lognormal
+
+rvs = lognormal.sample(Nsample=1000,mu=1,sigma=1)
+```
+
+The distribution modules all contain similar functions, we'll list some in the following.
 
 #### Distribution Properties
 
@@ -317,6 +326,91 @@ def alpha_xmin_beta_and_log_likelihood(data, beta0=[2.,], stop_at_first_max=Fals
         Optimal alpha, xmin, beta, and log likelihood.
     """
 ```
+
+### Some other functionalities
+
+You can do a complete fit analysis with the experimental analysis function
+
+```python
+from fincoretails import distributions, unipareto
+from fincoretails.analysis import analysis
+
+Nsample = 2000
+atrue = 2
+ytrue = 3
+data = unipareto.sample(Nsample,atrue,ytrue)
+dists = distributions[:-1] # disregard Santa Fe distribution
+
+analysis(data, dists)
+```
+
+There's also functionalities to do goodness-of-fit:
+
+```python
+from fincoretails.tools import loglikelihood_ratio, aic
+```
+
+with function headers
+
+```python
+def loglikelihood_ratio(loglikelihoodsA, loglikelihoodsB, normalized_ratio=True):
+    """
+    Compute the log-likelihood ratio and the significance level.
+    Return the log-likelihood ratio R and the probability p
+    that a random sample from a normally distributed R-value
+    distribution would be larger or equal to the computed
+    R-value.
+
+    Parameters
+    ----------
+    loglikelihoodsA : array-like
+        Log-likelihoods under null hypothesis.
+    loglikelihoodsB : array-like
+        Log-likelihoods under alternative hypothesis.
+    normalized_ratio : bool, optional, default = True
+        If True (default), return the normalized log-likelihood ratio.
+
+    Returns
+    -------
+    R : float
+        The log-likelihood ratio. It is normalized if `normalized_ratio` is True.
+    p : float
+        The significance level, i.e., the probability that a random sample
+        from a normally distributed R-value distribution would be larger or
+        equal to the computed R-value.
+
+    Notes
+    -----
+    Typically, one classifies the R-value as 'significant' if p < 0.05. However,
+    also consider the context of the problem rather than strictly following this rule.
+    """
+
+def aic(logLL, number_of_free_parameters, nsamples=None):
+    """
+    Compute the Akaike Information Criterion (AIC).
+
+    Parameters
+    ----------
+    logLL : float
+        The log-likelihood.
+    number_of_free_parameters : int
+        The number of free parameters in the model.
+    nsamples : int, optional, default = None
+        The number of samples. If not provided or if the sample size is too small,
+        the function will return the regular AIC.
+
+    Returns
+    -------
+    AIC : float
+        The Akaike Information Criterion.
+
+    Notes
+    -----
+    If the number of samples and the number of free parameters are large enough,
+    the function will return the corrected AIC.
+    """
+```
+
 
 
 
