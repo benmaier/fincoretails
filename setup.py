@@ -22,7 +22,6 @@ setup(
                 'scipy>=1.9',
                 'sympy>=1.12',
     ],
-    tests_require=['pytest', 'pytest-cov'],
     setup_requires=['pytest-runner'],
     classifiers=['License :: OSI Approved :: MIT License',
                  'Programming Language :: Python :: 3.6',
