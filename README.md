@@ -10,6 +10,8 @@ to fork and tinker with this project.
 
 * repository: https://github.com/benmaier/fincoretails/
 
+![Example distributions of the piecewise models](hgithub.com/)
+
 ```python
 from fincoretails import lognormal, general_algpareto, loglikelihood_ratio, aic
 
@@ -74,14 +76,15 @@ So far, the package's functionality was tested on Mac OS X and CentOS only.
 
 ### Distributions
 
-Every distribution is treated as a separate module in this package. There's one
-module that makes all these distributions accessible as a list. 
+Every distribution is treated as a separate module in this package. There's 
+one list that makes all these distributions accessible.
 
 ```python
 from fincoretails import distributions
 ```
 
 will give you this list:
+
 ```python
 distributions = [
              # constant core (uniform distribution), power-law tail
