@@ -11,6 +11,12 @@ feel free to fork and tinker with this project.
 
 -  repository: https://github.com/benmaier/fincoretails/
 
+|Example distributions of the piecewise models| |Example fits of the
+generalized models| |Example fits of the forced models|
+
+Example
+-------
+
 .. code:: python
 
    from fincoretails import lognormal, general_algpareto, loglikelihood_ratio, aic
@@ -82,39 +88,61 @@ be installed by ``pip`` during the installation process
 Documentation
 -------------
 
-.. _distributions-fincoretailsdists:
-
-Distributions, ``fincoretails.dists``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Distributions
+~~~~~~~~~~~~~
 
 Every distribution is treated as a separate module in this package.
-There's one module that makes all these distributions accessible as a
-list.
+There's one list that makes all these distributions accessible.
 
 .. code:: python
 
-   from fincoretails.distributions import dists
+   from fincoretails import distributions
 
 will give you this list:
 
-.. code:: bash
+.. code:: python
 
    distributions = [
+                # constant core (uniform distribution), power-law tail
                 fincoretails.unipareto,
+
+                # core: (2-(x/xmin)^alpha), tail: (xmin/x)^alpha
                 fincoretails.algpareto,
+
+                # core: (x/xmin)^alpha, tail: (xmin/x)^alpha
                 fincoretails.powpareto,
+
+                # core: exp[-alpha(x/xmin-1)], tail: (xmin/x)^alpha
                 fincoretails.expareto,
+
+                # core: (2-(x/xmin)^beta), tail: (xmin/x)^alpha
                 fincoretails.general_algpareto,
+                
+                # core: (x/xmin)^beta, tail: (xmin/x)^alpha
                 fincoretails.general_powpareto,
+
+                # core: exp[-beta(x/xmin-1)], tail: (xmin/x)^alpha
                 fincoretails.general_expareto,
+
+                # log-normal as reference
                 fincoretails.lognormal,
+
+                # see Appendix D of the paper
                 fincoretails.santafe,
               ]
 
 We'll comment on each of them further below.
 
-Each distribution module contains similar functions, we'll list some
-here
+Each distribution module can also be imported as e.g.
+
+.. code:: python
+
+   from fincoretails import lognormal
+
+   rvs = lognormal.sample(Nsample=1000,mu=1,sigma=1)
+
+The distribution modules all contain similar functions, we'll list some
+in the following.
 
 Distribution Properties
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -135,7 +163,6 @@ Distribution Properties
 
    def Pcrit(alpha, xmin, beta):
        """Computes the CDF at xmin given distribution parameters."""
-
 
    def cdf(x, alpha, xmin, beta):
        """
@@ -320,6 +347,92 @@ Distribution Fitting
            Optimal alpha, xmin, beta, and log likelihood.
        """
 
+Some other functionalities
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can do a complete fit analysis with the experimental analysis
+function
+
+.. code:: python
+
+   from fincoretails import distributions, unipareto
+   from fincoretails.analysis import analysis
+
+   Nsample = 2000
+   atrue = 2
+   ytrue = 3
+   data = unipareto.sample(Nsample,atrue,ytrue)
+   dists = distributions[:-1] # disregard Santa Fe distribution
+
+   analysis(data, dists)
+
+There's also functionalities to do goodness-of-fit:
+
+.. code:: python
+
+   from fincoretails.tools import loglikelihood_ratio, aic
+
+with function headers
+
+.. code:: python
+
+   def loglikelihood_ratio(loglikelihoodsA, loglikelihoodsB, normalized_ratio=True):
+       """
+       Compute the log-likelihood ratio and the significance level.
+       Return the log-likelihood ratio R and the probability p
+       that a random sample from a normally distributed R-value
+       distribution would be larger or equal to the computed
+       R-value.
+
+       Parameters
+       ----------
+       loglikelihoodsA : array-like
+           Log-likelihoods under null hypothesis.
+       loglikelihoodsB : array-like
+           Log-likelihoods under alternative hypothesis.
+       normalized_ratio : bool, optional, default = True
+           If True (default), return the normalized log-likelihood ratio.
+
+       Returns
+       -------
+       R : float
+           The log-likelihood ratio. It is normalized if `normalized_ratio` is True.
+       p : float
+           The significance level, i.e., the probability that a random sample
+           from a normally distributed R-value distribution would be larger or
+           equal to the computed R-value.
+
+       Notes
+       -----
+       Typically, one classifies the R-value as 'significant' if p < 0.05. However,
+       also consider the context of the problem rather than strictly following this rule.
+       """
+
+   def aic(logLL, number_of_free_parameters, nsamples=None):
+       """
+       Compute the Akaike Information Criterion (AIC).
+
+       Parameters
+       ----------
+       logLL : float
+           The log-likelihood.
+       number_of_free_parameters : int
+           The number of free parameters in the model.
+       nsamples : int, optional, default = None
+           The number of samples. If not provided or if the sample size is too small,
+           the function will return the regular AIC.
+
+       Returns
+       -------
+       AIC : float
+           The Akaike Information Criterion.
+
+       Notes
+       -----
+       If the number of samples and the number of free parameters are large enough,
+       the function will return the corrected AIC.
+       """
+
 Changelog
 ---------
 
@@ -379,5 +492,8 @@ until the warnings disappear. Then do
 
    make upload
 
+.. |Example distributions of the piecewise models| image:: https://github.com/benmaier/fincoretails/blob/main/cookbook/example_plots/example_plots.png?raw=true
+.. |Example fits of the generalized models| image:: https://github.com/benmaier/fincoretails/blob/main/cookbook/example_plots/fit_plots_0.png?raw=true
+.. |Example fits of the forced models| image:: https://github.com/benmaier/fincoretails/blob/main/cookbook/example_plots/fit_plots_1.png?raw=true
 .. |Contributor Covenant| image:: https://img.shields.io/badge/Contributor%20Covenant-v1.4%20adopted-ff69b4.svg
    :target: code-of-conduct.md
