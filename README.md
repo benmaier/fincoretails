@@ -11,8 +11,8 @@ to fork and tinker with this project.
 * repository: https://github.com/benmaier/fincoretails/
 
 ![Example distributions of the piecewise models](https://github.com/benmaier/fincoretails/blob/main/cookbook/example_plots/example_plots.png?raw=true)
-![Example fits of the generalized models](https://github.com/benmaier/fincoretails/blob/main/cookbook/example_plots/fit_plots_1.png?raw=true)
-![Example fits of the forced models](https://github.com/benmaier/fincoretails/blob/main/cookbook/example_plots/fit_plots_2.png?raw=true)
+![Example fits of the generalized models](https://github.com/benmaier/fincoretails/blob/main/cookbook/example_plots/fit_plots_0.png?raw=true)
+![Example fits of the forced models](https://github.com/benmaier/fincoretails/blob/main/cookbook/example_plots/fit_plots_1.png?raw=true)
 
 ```python
 from fincoretails import lognormal, general_algpareto, loglikelihood_ratio, aic
