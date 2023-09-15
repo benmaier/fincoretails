@@ -82,7 +82,7 @@ from fincoretails.distributions import dists
 ```
 
 will give you this list:
-```
+```python
 distributions = [
              # constant core (uniform distribution), power-law tail
              fincoretails.unipareto,
@@ -192,7 +192,7 @@ def neighbor_degree(*args, **kwargs):
 
 #### Distribution Fitting
 
-```
+```python
 def fit_params(data, beta_initial_values=(1.,), minxmin=None, maxxmin=None):
     """
     Fits distribution parameters based on data.
