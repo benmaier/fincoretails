@@ -8,7 +8,7 @@ This should not be considered a fully functional fledged, smooth-edged library,
 it just contains the bare necessities to fit some stuff. Please feel free
 to fork and tinker with this project.
 
-* paper: 
+* paper: https://arxiv.org/abs/2309.09589
 * repository: https://github.com/benmaier/fincoretails
 * zenodo: https://zenodo.org/record/8349920
 
