@@ -19,7 +19,7 @@ def loglikelihood(data, *parameters):
     return np.sum(loglikelihoods(data, *parameters))
 
 def get_normalization_constant(alpha, xmin):
-    return general_normalization_constant(alpha, xmin, alpha)
+    return general_normalization_constant(alpha, xmin, beta=0)
 
 def pdf(x, alpha, xmin):
     return general_pdf(x, alpha, xmin, beta=0)

@@ -8,7 +8,9 @@ This should not be considered a fully functional fledged, smooth-edged library,
 it just contains the bare necessities to fit some stuff. Please feel free
 to fork and tinker with this project.
 
-* repository: https://github.com/benmaier/fincoretails/
+* paper: 
+* repository: https://github.com/benmaier/fincoretails
+* zenodo: https://zenodo.org/record/8349920
 
 ![Example distributions of the piecewise models](https://github.com/benmaier/fincoretails/blob/main/cookbook/example_plots/example_plots.png?raw=true)
 ![Example fits of the generalized models](https://github.com/benmaier/fincoretails/blob/main/cookbook/example_plots/fit_plots_0.png?raw=true)
